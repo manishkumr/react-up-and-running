@@ -18,6 +18,28 @@ ReactDOM.render(
 **/
 
 var TextAreaCounter = createReactClass({
+    _log: function(methodName, args) {
+    console.log(methodName, args);
+  },
+  componentWillUpdate:  function() {
+    this._log('componentWillUpdate',  arguments);
+  },
+  componentDidUpdate:   function(oldProps, oldState) {
+        if (this.state.text.length > 10){
+            this.replaceState(oldState)
+
+        }
+    this._log('componentDidUpdate',   arguments);
+  },
+  componentWillMount:   function() {
+    this._log('componentWillMount',   arguments);
+  },
+  componentDidMount:    function() {
+    this._log('componentDidMount',    arguments);
+  },
+  componentWillUnmount: function() {
+    this._log('componentWillUnmount', arguments);
+  },
     propTypes: {
         text : PropTypes.string,
     },
