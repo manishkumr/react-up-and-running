@@ -16,33 +16,39 @@ ReactDOM.render(
     document.getElementById("app")
 );
 **/
+var logMixin = {
+    _log : function (methodName, args) {
+            console.log(this.name + '::' + methodName, args)
+    },
+    componentWillUpdate:  function() {
+    this._log('componentWillUpdate',  arguments);
+    },
+    componentDidUpdate:   function(oldProps, oldState) {
+        this._log('componentDidUpdate',   arguments);
+    },
+    componentWillMount:   function() {
+        this._log('componentWillMount',   arguments);
+    },
+    componentDidMount:    function() {
+        this._log('componentDidMount',    arguments);
+    },
+    componentWillUnmount: function() {
+        this._log('componentWillUnmount', arguments);
+  },
+}
+
+var Counter = createReactClass({
+    name: 'Counter',
+    mixins: [logMixin],
+    propTypes: {
+        count: PropTypes.number.isRequired,
+    },
+    render: function () {
+        return <span>{this.props.count}</span>
+    }
+});
 
 var TextAreaCounter = createReactClass({
-    _log: function(methodName, args) {
-    console.log(methodName, args);
-  },
-  componentWillUpdate:  function() {
-    this._log('componentWillUpdate',  arguments);
-  },
-  componentDidUpdate:   function(oldProps, oldState) {
-        if (this.state.text.length > 10){
-            this.replaceState(oldState)
-
-        }
-    this._log('componentDidUpdate',   arguments);
-  },
-  componentWillMount:   function() {
-    this._log('componentWillMount',   arguments);
-  },
-  componentDidMount:    function() {
-    this._log('componentDidMount',    arguments);
-  },
-  componentWillUnmount: function() {
-    this._log('componentWillUnmount', arguments);
-  },
-    propTypes: {
-        text : PropTypes.string,
-    },
     getDefaultProps: function () {
       return {
           text: '',
@@ -61,13 +67,24 @@ var TextAreaCounter = createReactClass({
       )
     },
     render: function () {
+        console.log(this)
+        var counter = null;
+        if (this.state.text.length > 0 ){
+
+            counter  =
+                <h3>
+                    <Counter count={this.state.text.length}/>
+            </h3>
+        }
         return <div>
             <textarea onChange={this._textChange} value={this.state.text}> </textarea>
-            <h3>{this.state.text.length}</h3>
+            {counter}
         </div>
 
     }
 });
+
+
 
 var myComp = ReactDOM.render(
      React.createElement(TextAreaCounter,{
