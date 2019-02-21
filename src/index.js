@@ -4,96 +4,123 @@ import createReactClass from 'create-react-class'
 import PropTypes from 'prop-types'
 import './index.css';
 import * as serviceWorker from './serviceWorker';
-/**
-var component = createReactClass({
-  render: function() {
-    return <span>My name is  {this.props.name} </span>;
-  }
-});
-var ComponentFactory = React.createFactory(component)
-ReactDOM.render(
-     React.createElement(component,{name: "Manish"}),
-    document.getElementById("app")
-);
-**/
-var logMixin = {
-    _log : function (methodName, args) {
-            console.log(this.name + '::' + methodName, args)
-    },
-    componentWillUpdate:  function() {
-    this._log('componentWillUpdate',  arguments);
-    },
-    componentDidUpdate:   function(oldProps, oldState) {
-        this._log('componentDidUpdate',   arguments);
-    },
-    componentWillMount:   function() {
-        this._log('componentWillMount',   arguments);
-    },
-    componentDidMount:    function() {
-        this._log('componentDidMount',    arguments);
-    },
-    componentWillUnmount: function() {
-        this._log('componentWillUnmount', arguments);
-  },
-}
 
-var Counter = createReactClass({
-    name: 'Counter',
-    mixins: [logMixin],
+var headers = [
+  "Book", "Author", "Language", "Published", "Sales"
+];
+
+var data = [
+    ["The Lord of the Rings", "J. R. R. Tolkien",
+    "English", "1954–1955", "150 million"],
+  ["Le Petit Prince (The Little Prince)", "Antoine de Saint-Exupéry",
+    "French", "1943", "140 million"],
+  ["Harry Potter and the Philosopher's Stone", "J. K. Rowling",
+    "English", "1997", "107 million"],
+  ["And Then There Were None", "Agatha Christie",
+    "English", "1939", "100 million"],
+  ["Dream of the Red Chamber", "Cao Xueqin",
+    "Chinese", "1754–1791", "100 million"],
+  ["The Hobbit", "J. R. R. Tolkien",
+    "English", "1937", "100 million"],
+  ["She: A History of Adventure", "H. Rider Haggard",
+    "English", "1887", "100 million"],
+];
+
+var Excel = createReactClass({
+    //displayName: 'Excel',
     propTypes: {
-        count: PropTypes.number.isRequired,
+        headers: PropTypes.arrayOf(
+            PropTypes.string
+        ),
+        initialData: PropTypes.arrayOf(
+            PropTypes.arrayOf(
+                PropTypes.any
+            )
+        )
     },
-    render: function () {
-        return <span>{this.props.count}</span>
-    }
-});
 
-var TextAreaCounter = createReactClass({
-    getDefaultProps: function () {
-      return {
-          text: '',
-      };
-    },
-    getInitialState: function () {
+    getInitialState: function() {
         return {
-            text: this.props.text
-        };
+            data: this.props.initialData,
+            sortby: null,
+            descending: false,
+            edit: null,
+        }
     },
-    _textChange: function(ev) {
-      this.setState({
-          text: ev.target.value,
-          }
-
-      )
+    _sort: function(e){
+        var column = e.target.cellIndex;
+        var data = this.state.data.slice();
+        var descending = this.state.sortby === column && ! this.state.descending;
+        data.sort(function (a, b) {
+            return descending
+                ? (a[column] < b[column] ? 1 : -1)
+                : (a[column] < b[column] ? 1 : -1);
+        });
+        this.setState({
+            data: data,
+            sortby: column,
+            descending: descending,
+        });
+    },
+    _showEditor: function(e){
+        this.setState({edit:{
+            row: parseInt(e.target.dataset.row, 10),
+                cell: e.target.cellIndex,
+            }
+        });
+    },
+    _save: function(e){
+        e.preventDefault();
+        var input = e.target.firstChild;
+        var data = this.state.data.slice();
+        data[this.state.edit.row][this.state.edit.cell] = input.value;
+        this.setState({
+            edit: null, // done editing
+            data: data,
+        });
     },
     render: function () {
-        console.log(this)
-        var counter = null;
-        if (this.state.text.length > 0 ){
-
-            counter  =
-                <h3>
-                    <Counter count={this.state.text.length}/>
-            </h3>
-        }
-        return <div>
-            <textarea onChange={this._textChange} value={this.state.text}> </textarea>
-            {counter}
-        </div>
-
-    }
+    return <table>
+            <thead onClick={this._sort}>
+                <tr>
+                    {this.props.headers.map(function (title, idx) {
+                        if (this.state.sortby === idx){
+                            title += this.state.descending ? '\u2191' : '\u2193'
+                        }
+                        let th = <th key={idx}>{title}</th>;
+                        return th
+                    }, this)
+                    }
+                </tr>
+            </thead>
+            <tbody onDoubleClick={this._showEditor}>
+                { this.state.data.map(function (row,rowidx) {
+                    return (
+                        <tr key={rowidx}>
+                            {row.map(function (cell,idx) {
+                                var content = cell;
+                                var edit = this.state.edit;
+                                if (edit && edit.row === rowidx && edit.cell === idx) {
+                                    content = <form onSubmit={this._save}>
+                                        <input type={'text'} defaultValue={content}></input>
+                                    </form>
+                                }
+                                let td = <td key={idx} data-row={rowidx}>{content}</td>
+                                return td
+                            }, this)
+                            }
+                        </tr>
+                    );
+            }, this)}
+        </tbody>
+    </table>;
+}
 });
 
-
-
-var myComp = ReactDOM.render(
-     React.createElement(TextAreaCounter,{
-        text: "Manish",
-     }),
+ReactDOM.render(
+    React.createElement(Excel,{
+        headers: headers,
+        initialData: data,
+    }),
     document.getElementById("app")
 );
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: http://bit.ly/CRA-PWA
-serviceWorker.unregister();
