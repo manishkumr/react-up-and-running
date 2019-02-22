@@ -28,6 +28,7 @@ var data = [
 
 var Excel = createReactClass({
     //displayName: 'Excel',
+    _preSearchData: null,
     propTypes: {
         headers: PropTypes.arrayOf(
             PropTypes.string
@@ -45,6 +46,7 @@ var Excel = createReactClass({
             sortby: null,
             descending: false,
             edit: null,
+            search: false,
         }
     },
     _sort: function(e){
@@ -61,6 +63,34 @@ var Excel = createReactClass({
             sortby: column,
             descending: descending,
         });
+    },
+    _toggleSearch: function() {
+        if (this.state.search) {
+            this.setState({
+                data: this._preSearchData,
+                search: false,
+        });
+        this._preSearchData = null;
+        } else {
+            this._preSearchData = this.state.data;
+            this.setState({
+            search: true,
+            });
+        }
+    },
+    _search: function(e){
+        var needle = e.target.value.toLowerCase();
+        if(!needle){
+            this.setState({data: this._preSearchData});
+            return;
+        }
+        var idx = e.target.dataset.idx;
+        var searchdata = this._preSearchData.filter(function (row){
+            return row[idx].toString().toLowerCase().indexOf(needle) > -1;
+        });
+        this.setState({data: searchdata});
+        var needle = e.target.value.toLowerCase();
+
     },
     _showEditor: function(e){
         this.setState({edit:{
@@ -79,8 +109,23 @@ var Excel = createReactClass({
             data: data,
         });
     },
-    render: function () {
-    return <table>
+    _renderToolbar : function(){
+        return <button onClick={this._toggleSearch} className={'toolbar'}>Search</button>
+    },
+    _renderSearch: function (){
+        if(!this.state.search){
+            return null;
+        }
+        return (
+            <tr onChange={this._search}>
+                {this.props.headers.map(function (_ignore, idx) {
+                     return <td key={idx}><input type={'text'} data-idx={idx}/></td>
+                })}
+            </tr>
+        )
+    },
+    _renderTable: function (){
+        return <table>
             <thead onClick={this._sort}>
                 <tr>
                     {this.props.headers.map(function (title, idx) {
@@ -94,6 +139,7 @@ var Excel = createReactClass({
                 </tr>
             </thead>
             <tbody onDoubleClick={this._showEditor}>
+            {this._renderSearch()}
                 { this.state.data.map(function (row,rowidx) {
                     return (
                         <tr key={rowidx}>
@@ -107,14 +153,22 @@ var Excel = createReactClass({
                                 }
                                 let td = <td key={idx} data-row={rowidx}>{content}</td>
                                 return td
-                            }, this)
+                            },this)
                             }
                         </tr>
                     );
             }, this)}
         </tbody>
     </table>;
-}
+    },
+    render: function () {
+        return (
+            <div>
+                {this._renderToolbar()}
+                {this._renderTable()}
+            </div>
+        )
+    },
 });
 
 ReactDOM.render(
