@@ -1,9 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import createReactClass from 'create-react-class'
-import PropTypes from 'prop-types'
+import {MuiThemeProvider, createMuiTheme} from "@material-ui/core/styles";
+import Button from '@material-ui/core/Button';
+import Table from '@material-ui/core/Table'
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
+import TableHead from "@material-ui/core/es/TableHead/TableHead";
+import TableRow from "@material-ui/core/es/TableRow/TableRow";
+import TableBody from "@material-ui/core/es/TableBody/TableBody";
+import TableCell from "@material-ui/core/es/TableCell/TableCell";
+import Input from "@material-ui/core/Input"
+import Paper from "@material-ui/core/Paper";
+
+const theme = createMuiTheme({
+    root: {
+        margin: 20,
+    },
+    table: {
+        margin: 10,
+    }
+    }
+)
 
 var headers = [
   "Book", "Author", "Language", "Published", "Sales"
@@ -89,7 +108,6 @@ var Excel = createReactClass({
             return row[idx].toString().toLowerCase().indexOf(needle) > -1;
         });
         this.setState({data: searchdata});
-        var needle = e.target.value.toLowerCase();
 
     },
     _showEditor: function(e){
@@ -110,7 +128,7 @@ var Excel = createReactClass({
         });
     },
     _renderToolbar : function(){
-        return <button onClick={this._toggleSearch} className={'toolbar'}>Search</button>
+        return <Button variant={"contained"} color={"primary"}  onClick={this._toggleSearch} className={'toolbar'}>Search</Button>
     },
     _renderSearch: function (){
         if(!this.state.search){
@@ -119,30 +137,31 @@ var Excel = createReactClass({
         return (
             <tr onChange={this._search}>
                 {this.props.headers.map(function (_ignore, idx) {
-                     return <td key={idx}><input type={'text'} data-idx={idx}/></td>
+                    return <td key={idx}><input data-idx={idx}></input></td>
                 })}
             </tr>
         )
     },
     _renderTable: function (){
-        return <table>
-            <thead onClick={this._sort}>
-                <tr>
+        return <Paper>
+        <Table>
+            <TableHead onClick={this._sort}>
+                <TableRow>
                     {this.props.headers.map(function (title, idx) {
                         if (this.state.sortby === idx){
                             title += this.state.descending ? '\u2191' : '\u2193'
                         }
-                        let th = <th key={idx}>{title}</th>;
+                        let th = <TableCell key={idx}>{title}</TableCell>;
                         return th
                     }, this)
                     }
-                </tr>
-            </thead>
-            <tbody onDoubleClick={this._showEditor}>
+                </TableRow>
+            </TableHead>
+            <TableBody onDoubleClick={this._showEditor}>
             {this._renderSearch()}
                 { this.state.data.map(function (row,rowidx) {
                     return (
-                        <tr key={rowidx}>
+                        <TableRow key={rowidx}>
                             {row.map(function (cell,idx) {
                                 var content = cell;
                                 var edit = this.state.edit;
@@ -151,15 +170,16 @@ var Excel = createReactClass({
                                         <input type={'text'} defaultValue={content}></input>
                                     </form>
                                 }
-                                let td = <td key={idx} data-row={rowidx}>{content}</td>
+                                let td = <TableCell key={idx} data-row={rowidx}>{content}</TableCell>
                                 return td
                             },this)
                             }
-                        </tr>
+                        </TableRow>
                     );
             }, this)}
-        </tbody>
-    </table>;
+        </TableBody>
+    </Table>
+        </Paper>;
     },
     render: function () {
         return (
@@ -172,9 +192,8 @@ var Excel = createReactClass({
 });
 
 ReactDOM.render(
-    React.createElement(Excel,{
-        headers: headers,
-        initialData: data,
-    }),
+    <MuiThemeProvider theme={theme}>
+        <Excel headers={headers} initialData={data}/>
+    </MuiThemeProvider>,
     document.getElementById("app")
 );
